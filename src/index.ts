@@ -7,12 +7,47 @@
  * 
  */
 export interface CacheStore<K extends IDBValidKey, V> {
+    /** Set Value
+     * 
+     * @param {K} key 
+     * @param {V} value 
+     * @param {number|Date} ttl 
+     * @returns {Promise<void>}
+     */
     set:(key:K, value:V, ttl?:number|Date)=>Promise<void>
+
+    /** Get Value
+     * 
+     * @param {K} key 
+     * @returns {Promise<V|null>}
+     */
     remove:(key:K)=>Promise<void>
+
+    /** Remove Value
+     * 
+     * @param {K} key 
+     * @returns {Promise<void>}
+     */
     get:(key:K)=>Promise<V|null>
+
+    /** Clear Cache Store
+     * 
+     * @returns {Promise<void>}
+        */
     clear:()=>Promise<void>
-    close:()=>void
+
+    /** Get Count
+     * 
+     * Gets the number of entries stored in the cache.
+     * 
+     * @returns {Promise<number>}
+     */
     count:()=>Promise<number>
+
+    /** Close Connection
+     * 
+     */
+    close:()=>void
 }
 
 /** Cache Options
