@@ -3,6 +3,9 @@
  * @author Alex Malotky
  */
 const target = document.body;
+const queue = [];
+
+export const sleep = n => new Promise(res=>window.setTimeout(res, n));
 
 /** Wrap Test In Promise
  * 
@@ -11,12 +14,22 @@ const target = document.body;
  * @returns {Promise<string[]|string>} 
  */
 function wrap(fun, timeout) {
-    return new Promise((res, rej)=>{
+    queue.push(fun);
+    return new Promise(async(res, rej)=>{
+        while(fun !== queue[0]) {
+            await sleep(10);
+        }
+            
+
         let id;
-        const done = (result) => {
+        const cleanup = () => {
             if(id)
                 window.clearTimeout(id);
-
+            if(fun === queue[0])
+                queue.shift();
+        }
+        const done = (result) => {
+            cleanup()
             if(result) {
                 res(result);
             } else {
@@ -25,9 +38,7 @@ function wrap(fun, timeout) {
         }
 
         const error = (reason) => {
-            if(id)
-                window.clearTimeout(id);
-
+            cleanup();
             if(reason instanceof Error) {
                 rej(reason.message);
             } else {
@@ -37,7 +48,7 @@ function wrap(fun, timeout) {
 
         if(timeout) {
             id = window.setTimeout(()=>{
-                rej("Test Timed Out!")
+                error("Test Timed Out!")
             }, timeout);
         }
         
