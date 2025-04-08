@@ -7,11 +7,12 @@
  * 
  */
 export interface CacheStore<K extends IDBValidKey, V> {
-    set:(key:K, vvalue:V, ttl?:number|Date)=>Promise<void>
+    set:(key:K, value:V, ttl?:number|Date)=>Promise<void>
     remove:(key:K)=>Promise<void>
     get:(key:K)=>Promise<V|null>
     clear:()=>Promise<void>
     close:()=>void
+    count:()=>Promise<number>
 }
 
 /** Cache Options
@@ -29,11 +30,6 @@ export interface CacheStoreOptions<T>{
     validate?:(v:unknown)=>v is T
     defaultTtl?:number|Date
 }
-
-/** Cache Store Generator
- * 
- */
-export type CacheStoreGenerator = (name:string, opts:CacheStoreOptions<unknown>)=>Promise<CacheStore<any, unknown>>;
 
 /** UpgradeCacheFunction
  * 
@@ -147,7 +143,7 @@ function formatTtl(...values:Array<number|Date|undefined>):number|undefined {
  * @param {CacheOptions} cacheOpts 
  * @returns {CacheStoreGenerator}
  */
-export function initalizeCache(cacheName:string, cacheOpts:CacheOptions = {}):CacheStoreGenerator {
+export function initalizeCache(cacheName:string, cacheOpts:CacheOptions = {}) {
 
     /** Generate Cache Store
      * 
@@ -172,7 +168,7 @@ export function initalizeCache(cacheName:string, cacheOpts:CacheOptions = {}):Ca
                     ttl = formatTtl(ttl, defaultTtl);
 
                     if(ttl === undefined)
-                        return rej(new Error("No Ttl was set!"));
+                        return rej(new Error("No Ttl is set!"));
     
                     if(db === null)
                         return rej(new Error("IndexDB Connection is Closed!"));
@@ -194,7 +190,7 @@ export function initalizeCache(cacheName:string, cacheOpts:CacheOptions = {}):Ca
             get(key:K):Promise<V|null> {
                 return new Promise((res, rej)=>{
                     if(db === null)
-                        return rej(new Error("Database Connection was closed!"));
+                        return rej(new Error("Database Connection is closed!"));
 
                     const tx = db.transaction(name, "readwrite");
                     tx.onerror = () => rej(tx.error);
@@ -242,7 +238,7 @@ export function initalizeCache(cacheName:string, cacheOpts:CacheOptions = {}):Ca
             remove(key:K):Promise<void> {
                 return new Promise((res, rej)=>{
                     if(db === null)
-                        return rej(new Error("Database Connection was closed!"));
+                        return rej(new Error("Database Connection is closed!"));
 
                     const tx = db.transaction(name, "readwrite");
                     tx.onerror = () => rej(tx.error);
@@ -260,7 +256,7 @@ export function initalizeCache(cacheName:string, cacheOpts:CacheOptions = {}):Ca
             clear():Promise<void> {
                 return new Promise((res, rej)=>{
                     if(db === null)
-                        return rej(new Error("Database Connection was closed!"));
+                        return rej(new Error("Database Connection is closed!"));
 
                     const tx = db.transaction(name, "readwrite");
                     tx.onerror = () => rej(tx.error);
@@ -269,6 +265,22 @@ export function initalizeCache(cacheName:string, cacheOpts:CacheOptions = {}):Ca
                     wrapRequest(tx.objectStore(name).clear())
                         .then(res).catch(rej);
                 })
+            },
+
+            /** Get Count
+             * 
+             * Gets the number of entries stored in the cache.
+             * 
+             * @returns {Promise<number>}
+             */
+            count():Promise<number> {
+                return new Promise((res, rej)=>{
+                    if(db === null)
+                        return rej(new Error("Datebase Connection is closed!"));
+
+                    wrapRequest(db.transaction(name, "readonly").objectStore(name).getAllKeys())
+                        .then(list=>res(list.length)).catch(rej);
+                });
             },
 
             /** Close Connection
