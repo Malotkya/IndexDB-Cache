@@ -345,11 +345,14 @@ export function initalizeCache(cacheName:string, cacheOpts:CacheOptions = {}) {
                 let i = 0;
                 const next = async() => {
                     if(i < list.length) {
-                        const name = list[i++];
-                        const value:V = (await (this as CacheStore<K, V>).get(name))!;
-                        return {
-                            value: [name, value] satisfies CacheIteratorValue<K, V>,
-                            done: false
+                        while(i < list.length) {
+                            const name = list[i++];
+                            const value:V|null = (await (this as CacheStore<K, V>).get(name));
+                            if(value !== null)
+                                return {
+                                    value: [name, value] satisfies CacheIteratorValue<K, V>,
+                                    done: false
+                                }
                         }
                     }
                     
