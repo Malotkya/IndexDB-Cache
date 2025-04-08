@@ -131,10 +131,13 @@ async function initDB(cacheName:string, storeName:string, corupted?:CoruptedHand
  */
 function formatTtl(...values:Array<number|Date|undefined>):number|undefined {
     for(const v of values) {
-        if(v instanceof Date)
+        if(v instanceof Date) {
             return v.getTime()
-        else if(typeof v === "number")
+        } else if(typeof v === "number") {
+            if(v < 0)
+                return v;
             return Date.now() + v;
+        }
     }
 
     return undefined;
