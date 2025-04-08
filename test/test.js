@@ -1,3 +1,7 @@
+/** test.js
+ * 
+ * @author Alex Malotky
+ */
 const target = document.body;
 
 /** Wrap Test In Promise
@@ -72,7 +76,7 @@ export function test(name, fun, timeout) {
             for(let v of result){
                 const item = document.createElement("li");
                 item.textContent = v;
-                list.appendChild(list);
+                list.appendChild(item);
             }
         } else {
             const item = document.createElement("p");
@@ -80,6 +84,7 @@ export function test(name, fun, timeout) {
             section.appendChild(item);
         }
     }).catch(e => {
+        console.error(e);
         const item = document.createElement("p");
         item.style.color = "red";
         item.textContent = `Error: ${e}`;
