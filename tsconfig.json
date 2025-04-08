@@ -1,0 +1,22 @@
+{
+    "compilerOptions": {
+        "noImplicitAny": true,
+        "strict": true,
+        "module": "esnext",
+        "target": "ES2021",
+        "declaration": true,
+        "sourceMap": true,
+        "moduleResolution": "node",
+        "allowSyntheticDefaultImports": true,
+        "esModuleInterop": true,
+        "outDir": "./build",
+        "lib": ["dom", "es2022"]
+    },
+    "exclude": [
+        "build",
+        "node_modules"
+    ],
+    "include": [
+        "./src"
+    ]
+}
