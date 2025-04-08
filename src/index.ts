@@ -97,7 +97,9 @@ function wrapRequest<T>(req:IDBRequest<T>):Promise<T> {
  * @returns {Promise<IDBDatabase>}
  */
 async function initDB(cacheName:string, storeName:string, corupted?:CoruptedHandler):Promise<IDBDatabase> {
-    const db = await openDB(cacheName);
+    const db = await openDB(cacheName, undefined, (db)=>{
+        db.createObjectStore(storeName);
+    });
 
     if(db.objectStoreNames.contains(storeName))
         return db;
