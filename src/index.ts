@@ -104,8 +104,6 @@ async function initDB(cacheName:string, storeName:string, corupted?:CoruptedHand
     if(db.objectStoreNames.contains(storeName))
         return db;
 
-    db.createObjectStore(storeName);
-
     let version = db.objectStoreNames.length+1;
     if(version < db.version) {
         if(corupted){
