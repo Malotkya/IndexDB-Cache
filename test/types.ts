@@ -31,5 +31,8 @@ const altCache = initalizeCache("Alt");
         phone: "555-5555"
     });
 
-    const test = (await first.get("user_id"))?.name === (await newFirst.get("user_id"))?.name;
+
+    for await(const [key, value] of await first.entries()) {
+        console.log(`${key}: ${value}`);
+    }
 })()
