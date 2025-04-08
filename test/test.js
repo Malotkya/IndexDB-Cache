@@ -7,7 +7,7 @@ const target = document.body;
  * @returns {Promise<string[]|string>} 
  */
 function wrap(fun, timeout) {
-    return new Promise(async (res, rej)=>{
+    return new Promise((res, rej)=>{
         let id;
         const done = (result) => {
             if(id)
@@ -38,9 +38,14 @@ function wrap(fun, timeout) {
         }
         
         try {
-            done(await fun(done, error));
+            const promiseOrResult = fun(done, error);
+            if(promiseOrResult instanceof Promise) {
+                promiseOrResult.then(done).catch(error);
+            } else if(promiseOrResult || fun.length === 0) {
+                done(promiseOrResult);
+            }
         } catch (e){
-            error(e)
+            error(e);
         }
     });
 }
@@ -53,10 +58,6 @@ function wrap(fun, timeout) {
  */
 export function test(name, fun, timeout) {
     const section = document.createElement("section");
-    section.style.width = "80%";
-    section.style.margin = "0 auto";
-    section.style.border = "solid black 2px";
-    section.style.padding = "10px";
     target.appendChild(section);
 
     const header = document.createElement("h2");
