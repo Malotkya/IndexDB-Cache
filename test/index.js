@@ -1,5 +1,15 @@
-import Cache from "../build/index.js";
+/** Browser Testing
+ * 
+ * Run tests by running live server in index.html
+ * 
+ * @author Alex Malotky
+ */
+import Cache, {initalizeCache} from "../build/index.js";
 import {test} from "./test.js";
+
+const alt = initalizeCache("alt");
+
+const sleep = n => new Promise(res=>window.setTimeout(res, n));
 
 (async()=>{
     for(const name of await indexedDB.databases()) {
@@ -22,6 +32,66 @@ import {test} from "./test.js";
         const cache = await Cache("Second");
         cache.set(12, "Successful!");
     });
-    
+
+    test("Remove Value Test", async()=>{
+        const cache = await Cache("Second");
+        cache.remove(12);
+    });
+
+    test("Clear Values Test", async()=>{
+        const cache = await Cache("Empty");
+        await cache.set(1, "One");
+        await cache.set(2, "Two");
+        await cache.clear();
+
+        if(0 !== await cache.count())
+            throw new Error("Cache is not empty!");        
+    });
+
+    test("Seperate Cache Test", async()=>{
+        const first = await Cache("Test");
+        const second = await alt("Test", {defaultTtl: -1});
+
+        first.set("id", "This is stored in the default Cache");
+        second.set("id", "This is stored in the alternative Cache");
+
+        return (await first.get("id")) === (await second.get("id"));
+    });
+
+    test("TTL Test", async()=>{
+        const cache = await alt("TTL");
+        const output = [];
+        const ttl = 100;
+
+        const start = Date.now();
+        await cache.set("key", "value", ttl);
+        
+        output.push(`${Date.now() - start}: ${await cache.get("key")}`);
+        await sleep(ttl);
+
+        output.push(`${Date.now() - start}: ${await cache.get("key")}`);
+        return output;
+    });
+
+    test("TTL Error", (done, error)=>{
+        alt("TTL").then(cache=>{
+            cache.set("key", "value").then(()=>{
+                error("No error occured!");
+            }).catch(e=>{
+                done(e.message || String(e));
+            })
+        }).catch(error);
+    });
+
+    test("Closed Error", (done, error)=>{
+        alt("Test").then(cache=>{
+            cache.close();
+            cache.set("key", "value").then(()=>{
+                error("No error occured!");
+            }).catch(e=>{
+                done(e.message || String(e));
+            })
+        }).catch(error);
+    })
 })()
 
