@@ -341,19 +341,16 @@ export function initalizeCache(cacheName:string, cacheOpts:CacheOptions = {}) {
                     throw new Error("Datebase Connection is closed!");
 
                 const list = await wrapRequest<K[]>(db.transaction(name, "readonly").objectStore(name).getAllKeys() as IDBRequest<any[]>);
-                console.debug(list);
                 let i = 0;
                 const next = async() => {
-                    if(i < list.length) {
-                        while(i < list.length) {
-                            const name = list[i++];
-                            const value:V|null = (await (this as CacheStore<K, V>).get(name));
-                            if(value !== null)
-                                return {
-                                    value: [name, value] satisfies CacheIteratorValue<K, V>,
-                                    done: false
-                                }
-                        }
+                    while(i < list.length) {
+                        const name = list[i++];
+                        const value:V|null = (await (this as CacheStore<K, V>).get(name));
+                        if(value !== null)
+                            return {
+                                value: [name, value] satisfies CacheIteratorValue<K, V>,
+                                done: false
+                            }
                     }
                     
                     return {
