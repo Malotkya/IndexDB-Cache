@@ -5,11 +5,9 @@
  * @author Alex Malotky
  */
 import Cache, {initalizeCache} from "../build/index.js";
-import {test} from "./test.js";
+import {test, sleep} from "./test.js";
 
 const alt = initalizeCache("alt");
-
-const sleep = n => new Promise(res=>window.setTimeout(res, n));
 
 (async()=>{
     for(const name of await indexedDB.databases()) {
@@ -92,6 +90,33 @@ const sleep = n => new Promise(res=>window.setTimeout(res, n));
                 done(e.message || String(e));
             })
         }).catch(error);
+    });
+
+    test("Loop Test", async()=>{
+        const cache = await Cache("Test");
+        const output = [];
+
+        await cache.set(1, "One");
+        await cache.set(2, "Two");
+        await cache.set(3, "Three");
+        await cache.set(4, "Four");
+        await cache.set(5, "Five");
+
+        output.push("First Loop:")
+        for await(const [key, value] of await cache.entries())
+            output.push(`${key}: ${value}`);
+
+        await cache.set("Six", 6);
+        await cache.set("Seven", 7);
+        await cache.set("Eight", 8);
+        await cache.set("Nine", 9);
+        await cache.set("Ten", 10);
+
+        output.push("Second Loop:")
+        for await(const [key, value] of await cache.entries())
+            output.push(`${key}: ${value}`);
+
+        return output;
     })
 })()
 
