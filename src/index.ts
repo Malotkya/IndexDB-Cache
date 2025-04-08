@@ -44,11 +44,24 @@ export interface CacheStore<K extends IDBValidKey, V> {
      */
     count:()=>Promise<number>
 
+    /** Entries Iterator
+     * 
+     * @returns {Promise<CacheIteratorK, V>}
+     */
+    entries:()=>Promise<CacheIterator<K, V>>
+
     /** Close Connection
      * 
      */
     close:()=>void
 }
+
+interface CacheIterator<K extends IDBValidKey, V> {
+    [Symbol.asyncIterator]:()=>this
+    next:()=>Promise<{value:CacheIteratorValue<K, V>, done:boolean}>
+}
+
+type CacheIteratorValue<K extends IDBValidKey, V> = [key:K, value:V];
 
 /** Cache Options
  * 
@@ -57,6 +70,7 @@ export interface CacheOptions {
     corupted?: CoruptedHandler
     defaultTtl?:number|Date
 }
+
 
 /** Cache Store Options
  * 
@@ -316,6 +330,42 @@ export function initalizeCache(cacheName:string, cacheOpts:CacheOptions = {}) {
                     wrapRequest(db.transaction(name, "readonly").objectStore(name).getAllKeys())
                         .then(list=>res(list.length)).catch(rej);
                 });
+            },
+
+            /** Entries Iterator
+             * 
+             * @returns {Promise<CacheIteratorK, V>}
+             */
+            async entries():Promise<CacheIterator<K, V>> {
+                if(db === null)
+                    throw new Error("Datebase Connection is closed!");
+
+                const list = await wrapRequest<K[]>(db.transaction(name, "readonly").objectStore(name).getAllKeys() as IDBRequest<any[]>);
+                console.debug(list);
+                let i = 0;
+                const next = async() => {
+                    if(i < list.length) {
+                        const name = list[i++];
+                        const value:V = (await (this as CacheStore<K, V>).get(name))!;
+                        return {
+                            value: [name, value] satisfies CacheIteratorValue<K, V>,
+                            done: false
+                        }
+                    }
+                    
+                    return {
+                        value: <any>null,
+                        done: true
+                    }
+                    
+                }
+
+                return {
+                    [Symbol.asyncIterator] (){
+                        return this as CacheIterator<K, V>
+                    },
+                    next
+                }
             },
 
             /** Close Connection
