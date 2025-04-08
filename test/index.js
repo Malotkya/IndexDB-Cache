@@ -117,6 +117,20 @@ const alt = initalizeCache("alt");
             output.push(`${key}: ${value}`);
 
         return output;
+    });
+
+    test("TTL Loop Test", async()=>{
+        const cache = await alt("Loop");
+        const output = [];
+
+        await cache.set("Hello", "World!", -1);
+        await cache.set("bad", "This value should be skiped", 1);
+        await cache.set("Maybe?", "This one is a race", 100);
+
+        for await(const [key, value] of await cache.entries())
+            output.push(`${key}: ${value}`);
+
+        return output;
     })
 })()
 
